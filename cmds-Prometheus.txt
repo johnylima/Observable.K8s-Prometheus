@@ -1,0 +1,58 @@
+https://www.cyberithub.com/steps-to-create-an-aks-cluster-using-azure-cli/
+git clone https://github.com/johnylima/Observable.K8s-Prometheus
+
+PROJECT_ID="johnylima"
+gcloud services enable container.googleapis.com --project johnylima
+gcloud services enable monitoring.googleapis.com \
+cloudtrace.googleapis.com \
+clouddebugger.googleapis.com \
+cloudprofiler.googleapis.com \
+--project johnylima
+
+
+az login
+
+
+az aks create --resource-group Observable --name observable --node-count 1 --generate-ssh-keys
+az aks get-credentials --resource-group Observable --name observable
+
+#install prometheus operator
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prom-operator-01 prometheus-community/kube-prometheus-stack 
+kubectl --namespace default get pods -l "release=prom-operator-01"
+
+kubectl config set-context --current --namespace=prometheus
+kubectl port-forward prometheus-prom-operator-01-kube-prom-prometheus-0 9090:9090 --namespace=prometheus
+kubectl port-forward svc/prom-operator-01-grafana 8080:80 --namespace=prometheus
+
+kubectl get secret --namespace prometheus prom-operator-01-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
+kubectl get secret -n prometheus prom-operator-01-grafana -o json
+
+3000
+
+"admin-password": "cHJvbS1vcGVyYXRvcg==", prom-operator
+"admin-user": "YWRtaW4=", admin
+
+[Text.Encoding]::Utf8.GetString([Convert]::FromBase64String('cHJvbS1vcGVyYXRvcg=='))
+
+
+kubectl get secret -n rtf persistence-gateway-creds -o json | jq -r '.persistence-gateway-creds' | base64 --decode
+kubectl get ingress grafana-ingress -ojson | jq '.status.loadbalancer.ingress[].ip'
+
+
+
+Prometheus graph
+kube_pod_status_phase
+sum(kube_pod_status_phase)
+sum(kube_pod_status_phase{phase="Running"})
+sum(kube_pod_status_phase{phase="Running"})/sum(kube_pod_status_phase)
+sum(kube_pod_status_phase{phase="Running"})/sum(kube_pod_status_phase)*100
+The ratio of a pod in a running state
+	Sum by (node) (kube_pod_status_phase:{phase =”Running” }) /sum by ( namespace) (kube_pod_status_phase) *(100)
+The ratio of pods having a cpu limit defined
+	Count by (namespace) (kube_pod_container_resource_limits: {ressource=”cpu”}) /sum by ( namespace) (kube_pod_status_phase:{phase =”Running” }) *(100)
+
+
+
+
